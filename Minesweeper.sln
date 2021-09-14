@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Minesweeper.Tests", "Minesweeper.Tests\Minesweeper.Tests.csproj", "{E43A132F-C877-4D46-8AE6-EB8C7D30C62C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{AE685256-BD14-4007-9E1A-CECEADF131EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE685256-BD14-4007-9E1A-CECEADF131EA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE685256-BD14-4007-9E1A-CECEADF131EA}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{E43A132F-C877-4D46-8AE6-EB8C7D30C62C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E43A132F-C877-4D46-8AE6-EB8C7D30C62C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E43A132F-C877-4D46-8AE6-EB8C7D30C62C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E43A132F-C877-4D46-8AE6-EB8C7D30C62C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
