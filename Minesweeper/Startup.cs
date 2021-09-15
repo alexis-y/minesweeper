@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
@@ -64,7 +65,8 @@ namespace Minesweeper
 
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-            services.AddSingleton<IGameRepository, MemoryGameRepository>(); // TODO: Replace with an EF-based impl
+            services.AddDbContext<MinesweeperContext>(opts => opts.UseSqlServer(Configuration.GetConnectionString("Minesweeper")));
+            services.AddScoped<IGameRepository, DbGameRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

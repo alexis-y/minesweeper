@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
 using System.Linq;
 
@@ -12,12 +14,27 @@ namespace Minesweeper.Model
     {
         public const byte Mine = byte.MaxValue;
 
-        public Game(Size field, IEnumerable<Point> mines)
+        public Game()
         {
             Id = Guid.NewGuid();
+        }
+
+        /// <summary>
+        /// Constructs a new game with mines deployed to the given locations.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is only meaningful for unit testing.
+        /// </remarks>
+        public Game(Size field, IEnumerable<Point> mines) : this()
+        {
+            if (field.Width <= 0 || field.Height <= 0) throw new ArgumentException("The field's size cannot be 0", nameof(field));
+            if (field.Width >= 256 || field.Height >= 256) throw new ArgumentException("The field's side cannot exceed 255.", nameof(field));
+            if (mines == null) throw new ArgumentNullException(nameof(mines));
+            if (mines.Any(p => !(p.X >= 0 && p.X < field.Width && p.Y >= 0 && p.Y < field.Height))) throw new ArgumentException("There are mines outside the field.");
+
+
             Field = field;
-            Mines = mines ?? throw new ArgumentNullException(nameof(mines));
-            if (Mines.Any(p => !(p.X >= 0 && p.X < Field.Width && p.Y >= 0 && p.Y < Field.Height))) throw new ArgumentException("There are mines outside the field.");
+            Mines = new ReadOnlyCollection<Point>(mines.ToList());
         }
 
         /// <summary>
@@ -27,8 +44,6 @@ namespace Minesweeper.Model
         /// <param name="mines">Number of mines to deploy in the field</param>
         static public Game Create(Size field, ushort mines)
         {
-            if (field.Width <= 0 || field.Height <= 0) throw new ArgumentException("The field's size cannot be 0", nameof(field));
-            if (field.Width >= 256 || field.Height >= 256) throw new ArgumentException("The field's side cannot exceed 255.", nameof(field));
             if (mines >= field.Width * field.Height) throw new ArgumentException("The number of mines is higher than the field size.", nameof(mines));
 
             // Deploy the mines randomly
@@ -48,8 +63,6 @@ namespace Minesweeper.Model
                 minePos[n] += offset;
             }
 
-            // IDEA: Also persist the mines a single short instead of coordinates
-
             return new Game(
                 field,
                 minePos.Select(p => new Point(p % field.Width, p / field.Width))    // Wrap the linear position in 2 dimensions
@@ -59,6 +72,7 @@ namespace Minesweeper.Model
         /// <summary>
         /// Gets the primary key of the game.
         /// </summary>
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; protected set; }
 
         // TODO: Owner (thru ASP.NET Identity).

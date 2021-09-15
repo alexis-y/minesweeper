@@ -26,6 +26,7 @@
     <!-- Generate XML comments for Swashbuckle -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>79358bfa-7f65-4435-a608-7e4095f93cfd</UserSecretsId>
   </PropertyGroup>
     
   <ItemGroup>
