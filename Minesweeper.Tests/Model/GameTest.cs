@@ -9,6 +9,7 @@ namespace Minesweeper.Tests.Model
     [TestClass]
     public class GameTest
     {
+
         [TestMethod]
         public void Create()
         {
@@ -112,7 +113,7 @@ namespace Minesweeper.Tests.Model
             game.Move(new Point(3, 1));
 
             CollectionAssert.AreEqual(new[] { new Point(3, 1) }, game.Moves.ToArray(), "Stored the move");
-            Assert.IsTrue(game.IsOver, "The game ended");
+            Assert.AreEqual(GameResult.Lose, game.Result);
             CollectionAssert.AreEquivalent(game.Mines.ToArray(), game.Uncovered.Keys.ToArray(), "All the mines were uncovered");
             Assert.IsTrue(game.Uncovered.Keys.All(pos => game.Uncovered[pos] == Game.Mine), "All the mines were uncovered");
 
@@ -135,7 +136,7 @@ namespace Minesweeper.Tests.Model
             game.Move(new Point(3, 0));
 
             CollectionAssert.AreEqual(new[] { new Point(3, 0) }, game.Moves.ToArray(), "Stored the move");
-            Assert.IsFalse(game.IsOver);
+            Assert.IsNull(game.Result);
             CollectionAssert.AreEquivalent(new[] { new Point(3, 0) }, game.Uncovered.Keys.ToArray(), "The position was uncovered");
            
         }
@@ -157,7 +158,7 @@ namespace Minesweeper.Tests.Model
             game.Move(new Point(1, 2));
 
             CollectionAssert.AreEqual(new[] { new Point(1, 2) }, game.Moves.ToArray(), "Stored the move");
-            Assert.IsFalse(game.IsOver);
+            Assert.IsNull(game.Result);
             CollectionAssert.AreEquivalent(new[] {
                 new Point(0, 1), new Point(1, 1),
                 new Point(0, 2), new Point(1, 2), new Point(2, 2),
@@ -187,7 +188,7 @@ namespace Minesweeper.Tests.Model
                 game.Move(move);
             }
             CollectionAssert.AreEqual(moves, game.Moves.ToArray());
-            Assert.IsTrue(game.IsOver);
+            Assert.AreEqual(GameResult.Win, game.Result);
 
         }
 
@@ -206,7 +207,7 @@ namespace Minesweeper.Tests.Model
              */
 
             game.Move(new Point(3, 1));
-            Assert.IsTrue(game.IsOver, "The game ended");
+            Assert.IsNotNull(game.Result);
 
             Assert.ThrowsException<InvalidOperationException>(() => game.Move(new Point(0, 1)));
 

@@ -102,8 +102,11 @@ namespace Minesweeper.Model
         }
         private IDictionary<Point, byte> uncovered = new Dictionary<Point, byte>();
         
-        public bool IsOver { get; protected set; }
-        
+        /// <summary>
+        /// If the game is over, gets the result.
+        /// </summary>
+        public GameResult? Result { get; protected set; }
+
         /// <summary>
         /// Gets the number of mines adjacent to a given position.
         /// </summary>
@@ -118,7 +121,7 @@ namespace Minesweeper.Model
         /// </summary>
         public void Move(Point position)
         {
-            if (IsOver) throw new InvalidOperationException("The game already ended.");
+            if (Result.HasValue) throw new InvalidOperationException("The game already ended.");
             if (Uncovered.Keys.Contains(position)) throw new InvalidOperationException("Already uncovered this position.");
             GuardPosition(position);
 
@@ -128,7 +131,7 @@ namespace Minesweeper.Model
             if (Mines.Contains(position))
             {
                 // boom
-                IsOver = true;
+                Result = GameResult.Lose;
                 foreach(var mine in Mines) uncovered[mine] = Mine;
             }
 
@@ -136,7 +139,7 @@ namespace Minesweeper.Model
             Uncover(position);
 
             // The game continues until the the only covered positions are mines
-            if (Field.Width * Field.Height - Mines.Count() == Uncovered.Count) IsOver = true;
+            if (Field.Width * Field.Height - Mines.Count() == Uncovered.Count) Result = GameResult.Win;
 
         }
 

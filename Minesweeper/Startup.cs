@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
+using Minesweeper.Model;
+using System;
+using System.IO;
 using System.Reflection;
 
 namespace Minesweeper
@@ -23,6 +27,22 @@ namespace Minesweeper
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
+            // Use the Swagger Generator to describe our API
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo()
+                {
+                    Version = "v1",
+                    Title = "Minesweeper",
+                    Contact = new OpenApiContact()
+                    {
+                        Name = "Alexis Yannuzzi",
+                        Email = "alexisy@turboserver.com.ar"
+                    }
+                });
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+            });
+
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
@@ -30,6 +50,8 @@ namespace Minesweeper
             });
 
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            services.AddSingleton<IGameRepository, MemoryGameRepository>(); // TODO: Replace with an EF-based impl
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,6 +68,11 @@ namespace Minesweeper
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
+
+            // Serve the generated swagger document
+            app.UseSwagger();
+            // Plus the fancy UI (at /swagger)
+            app.UseSwaggerUI();
 
             app.UseMvc(routes =>
             {

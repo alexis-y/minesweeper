@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +20,10 @@ namespace Minesweeper.Controllers
 
         protected IGameRepository Db { get; }
 
-        // GET: api/games/5
+        /// <summary>
+        /// Fetches a <see cref="Dto.Game"/> by it's ID.
+        /// </summary>
+        /// <param name="id">The ID of the game looked for.</param>
         [HttpGet("{id}", Name = "Get")]
         public async Task<Dto.Game> GetAsync(Guid id)
         {
@@ -29,26 +31,35 @@ namespace Minesweeper.Controllers
             return Mapper.Map<Dto.Game>(game);
         }
 
-        // POST: api/games
+        /// <summary>
+        /// Starts a new <see cref="Dto.Game"/>.
+        /// </summary>
+        /// <param name="creation">Parameters of the new game.</param>
         [HttpPost]
-        public async Task<Dto.Game> Post([FromBody] Dto.CreateGame creation)
+        public async Task<Dto.Game> Post([FromBody] Dto.GameCreation creation)
         {
             // Create a new game (and make the first move)
             var game = Game.Create(creation.Field, creation.Mines);
 
             // TODO: It's not good UX if the first move ends in gameover...
+            game.Move(creation.Move);
             await Db.SaveAsync(game);
 
             return Mapper.Map<Dto.Game>(game);
         }
 
-        // POST: api/games/5/move
+        /// <summary>
+        /// Makes a move on a <see cref="Dto.Game"/>.
+        /// </summary>
+        /// <param name="id">The ID of the game looked for.</param>
+        /// <param name="position">The position played.</param>
         [HttpPost("{id}/move")]
-        public async Task<Dto.Game> Move(Guid id, [FromBody] Point position)
+        public async Task<Dto.Game> Move(Guid id, [FromBody] Dto.Point position)
         {
             // Make a move on a game
             var game = await Db.GetAsync(id);
-            
+            if (game == null) return null;
+
             // TODO: Turn InvalidOpEx into 400. Possible this is done as an app-wide filter.
             game.Move(position);
             await Db.SaveAsync(game);
