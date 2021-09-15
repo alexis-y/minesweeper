@@ -60,5 +60,20 @@ namespace Minesweeper.Tests.Dto.Profiles
             Assert.AreEqual("....XXXX.", output);
         }
 
+        [TestMethod]
+        public void Resolve_Flags()
+        {
+            // Flags are shown with an #
+
+            var source = new Game(new Size(9, 1), Enumerable.Empty<Point>());
+            source.Flag(new Point(2, 0), FlagKind.RedFlag);
+            source.Flag(new Point(4, 0), FlagKind.Tentative);
+            var data = new Dictionary<Point, byte>();
+            var resolver = new FieldDataResolver();
+
+            var output = resolver.Resolve(source, null, data, null, null);
+
+            Assert.AreEqual("..#.?....", output);
+        }
     }
 }

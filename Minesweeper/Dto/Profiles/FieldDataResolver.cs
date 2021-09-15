@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Minesweeper.Dto.Profiles
@@ -15,10 +16,10 @@ namespace Minesweeper.Dto.Profiles
              * Given the minefield size, we can transform the internal list of points to a simple text grid with a char for each tile
              * ie.:
              * 
-             * .....
+             * ..#..
              * ..1..
-             * .202.
-             * ..2..
+             * #202#
+             * .#2#.
              * .....
              * 
              */
@@ -27,6 +28,8 @@ namespace Minesweeper.Dto.Profiles
             //  '.' covered tile
             //  '[0-8]' uncovered tile, with the given number of mines in the proximity 
             //  'X' uncovered mine
+            //  '#' red flag
+            //  '?' mark
 
             var sb = new StringBuilder(source.Field.Height * source.Field.Width);
             for (var y = 0; y < source.Field.Height; y++)
@@ -34,7 +37,11 @@ namespace Minesweeper.Dto.Profiles
                 for (var x = 0; x < source.Field.Width; x++)
                 {
                     var p = new System.Drawing.Point(x, y);
-                    if (sourceMember.TryGetValue(p, out var value))
+                    if (source.Flags.TryGetValue(p, out var kind))
+                    {
+                        sb.Append(kind == Model.FlagKind.RedFlag ? "#" : "?");
+                    }
+                    else if (sourceMember.TryGetValue(p, out var value))
                     {
                         if (value == Model.Game.Mine)
                         {

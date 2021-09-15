@@ -67,5 +67,37 @@ namespace Minesweeper.Controllers
             return Mapper.Map<Dto.Game>(game);
         }
 
+        /// <summary>
+        /// Flags a position on a <see cref="Dto.Game"/>.
+        /// </summary>
+        /// <param name="id">The ID of the game looked for.</param>
+        /// <param name="kind">"red-flag", "question" or "clear".</param>
+        /// <param name="position">The position flagged.</param>
+        [HttpPost("{id}/flag/{kind}")]
+        public async Task<Dto.Game> Flag(Guid id, string kind, [FromBody] Dto.Point position)
+        {
+            FlagKind? flagKind = null;
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(kind, "red-flag"))
+            {
+                flagKind = FlagKind.RedFlag;
+            }
+            else if (StringComparer.InvariantCultureIgnoreCase.Equals(kind, "question"))
+            {
+                flagKind = FlagKind.Tentative;
+            }
+            else if (!StringComparer.InvariantCultureIgnoreCase.Equals(kind, "clear"))
+            {
+                return null;
+            }
+
+            // Plant a flag
+            var game = await Db.GetAsync(id);
+            if (game == null) return null;
+
+            game.Flag(position, flagKind);
+            await Db.SaveAsync(game);
+
+            return Mapper.Map<Dto.Game>(game);
+        }
     }
 }

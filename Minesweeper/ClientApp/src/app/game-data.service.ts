@@ -26,4 +26,16 @@ export class GameDataService extends DataService {
   public move(id: string, position: Point): Observable<Game> {
     return this._post(`${id}/move`, position);
   }
+
+  public redFlag(id: string, position: Point): Observable<Game> {
+    return this._post(`${id}/flag/red-flag`, position);
+  }
+
+  public question(id: string, position: Point): Observable<Game> {
+    return this._post(`${id}/flag/question`, position);
+  }
+
+  public clearFlag(id: string, position: Point): Observable<Game> {
+    return this._post(`${id}/flag/clear`, position);
+  }
 }

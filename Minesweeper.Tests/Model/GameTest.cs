@@ -229,7 +229,166 @@ namespace Minesweeper.Tests.Model
 
             game.Move(new Point(1, 2)); // This uncovers a span
             CollectionAssert.Contains(game.Uncovered.Keys.ToArray(), new Point(0, 2));  // We already tested this
-            Assert.ThrowsException<InvalidOperationException>(() => game.Move(new Point(0, 2)));
+            Assert.ThrowsException<ArgumentException>(() => game.Move(new Point(0, 2)));
+
+        }
+
+        [TestMethod]
+        public void Move_IntoFlagged()
+        {
+            var game = new Game(new Size(5, 5), new[] { new Point(0, 0), new Point(3, 1), new Point(4, 1), new Point(4, 2), new Point(3, 3), new Point(4, 3) });
+            /* 
+             *  |01234
+             * -+-----
+             * 0|*....
+             * 1|11.**
+             * 2|0X2.*
+             * 3|001**
+             * 4|001..
+             */
+
+            game.Flag(new Point(0, 0), FlagKind.RedFlag); // There's a mine here
+            Assert.ThrowsException<ArgumentException>(() => game.Move(new Point(0, 0)));
+
+        }
+
+        [TestMethod]
+        public void Move_IntoFlaggedSpan()
+        {
+            var game = new Game(new Size(5, 5), new[] { new Point(0, 0), new Point(3, 1), new Point(4, 1), new Point(4, 2), new Point(3, 3), new Point(4, 3) });
+            /* 
+             *  |01234
+             * -+-----
+             * 0|*....
+             * 1|11.**
+             * 2|0X2.*
+             * 3|0F.**
+             * 4|001..
+             */
+
+            game.Flag(new Point(1, 3), FlagKind.RedFlag);
+            game.Move(new Point(1, 2));
+
+            CollectionAssert.AreEqual(new[] { new Point(1, 2) }, game.Moves.ToArray(), "Stored the move");
+            Assert.IsNull(game.Result);
+            CollectionAssert.AreEquivalent(new[] {
+                new Point(0, 1), new Point(1, 1),
+                new Point(0, 2), new Point(1, 2), new Point(2, 2),
+                new Point(0, 3),
+                new Point(0, 4), new Point(1, 4), new Point(2, 4)
+            }, game.Uncovered.Keys.ToArray(), "The span was uncovered");
+
+        }
+
+        [TestMethod]
+        public void Flag_Covered()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Flag(new Point(1, 1), FlagKind.RedFlag);
+
+            CollectionAssert.AreEquivalent(new[] { new Point(1, 1) }, game.Flags.Keys.ToArray(), "Stored the flag");
+            Assert.AreEqual(FlagKind.RedFlag, game.Flags[new Point(1, 1)]);
+
+        }
+
+        [TestMethod]
+        public void Flag_Flagged()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Flag(new Point(1, 1), FlagKind.RedFlag);
+            Assert.ThrowsException<ArgumentException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
+        }
+
+
+        [TestMethod]
+        public void Flag_DifferentFlag()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Flag(new Point(1, 1), FlagKind.RedFlag);
+
+            game.Flag(new Point(1, 1), FlagKind.Tentative);
+
+            Assert.AreEqual(FlagKind.Tentative, game.Flags[new Point(1, 1)]);
+
+        }
+
+        [TestMethod]
+        public void Flag_Clear()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Flag(new Point(1, 1), FlagKind.RedFlag);
+            game.Flag(new Point(1, 1), null);
+            Assert.IsFalse(game.Flags.Any());
+
+        }
+
+        [TestMethod]
+        public void Flag_Uncovered()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Move(new Point(2, 2));
+            Assert.ThrowsException<ArgumentException>(() => game.Flag(new Point(2, 2), FlagKind.RedFlag));
+
+        }
+
+        [TestMethod]
+        public void Flag_AfterGameOver()
+        {
+            var game = new Game(new Size(3, 3), new[] { new Point(1, 1) });
+            /*
+             *   |012
+             *  -+---
+             *  0|...
+             *  1|.*.
+             *  2|...
+             */
+
+            game.Flag(new Point(1, 0), FlagKind.RedFlag);
+            game.Move(new Point(1, 1));
+            Assert.IsNotNull(game.Result);
+
+            Assert.ThrowsException<InvalidOperationException>(() => game.Flag(new Point(1, 0), null));
+            Assert.ThrowsException<InvalidOperationException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
 
         }
     }
