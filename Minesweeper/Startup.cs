@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Minesweeper.Model;
+using Newtonsoft.Json.Converters;
 using System;
 using System.IO;
 using System.Reflection;
@@ -25,12 +26,17 @@ namespace Minesweeper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddJsonOptions(opts =>
+                {
+                    opts.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
 
             // Use the Swagger Generator to describe our API
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(opts =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo()
+                opts.SwaggerDoc("v1", new OpenApiInfo()
                 {
                     Version = "v1",
                     Title = "Minesweeper",
@@ -40,7 +46,14 @@ namespace Minesweeper
                         Email = "alexisy@turboserver.com.ar"
                     }
                 });
-                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+                opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+                // TODO: make endpoint paths camelCase (https://github.com/domaindrivendev/Swashbuckle.WebApi/issues/834, seemengly fixed in aspnet v2.2
+                
+                // payload is supposed to be serialized in camelCase already (test that!), but the doc doesn't know it so nudge it
+                // TODO: This doesn't work :(
+                opts.DescribeAllParametersInCamelCase();
+
+                opts.UseInlineDefinitionsForEnums();
             });
 
             // In production, the Angular files will be served from this directory
