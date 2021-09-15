@@ -91,14 +91,13 @@ namespace Minesweeper.Model
         /// <summary>
         /// Gets the positions the player clicked.
         /// </summary>
-        public IEnumerable<Point> Moves => moves;
-        private ICollection<Point> moves = new List<Point>();
+        public IEnumerable<Point> Moves => _moves;
+        private ICollection<Point> _moves = new List<Point>();
 
         /// <summary>
         /// Gets the positions the player flagged.
         /// </summary>
-        public IReadOnlyDictionary<Point, FlagKind> Flags => (IReadOnlyDictionary<Point, FlagKind>)flags;
-        private IDictionary<Point, FlagKind> flags = new Dictionary<Point, FlagKind>();
+        public IDictionary<Point, FlagKind> Flags { get; protected set; } = new Dictionary<Point, FlagKind>();
 
         /// <summary>
         /// Gets all the positions that are uncovered, as well as the number of mines adjacent for each.
@@ -106,8 +105,8 @@ namespace Minesweeper.Model
         /// <remarks>
         /// A special value of <see cref="Mine"/> means that position is a mine that was exposed.
         /// </remarks>
-        public IReadOnlyDictionary<Point, byte> Uncovered => (IReadOnlyDictionary<Point, byte>)uncovered;
-        private IDictionary<Point, byte> uncovered = new Dictionary<Point, byte>();
+        public IReadOnlyDictionary<Point, byte> Uncovered => (IReadOnlyDictionary<Point, byte>)_uncovered;
+        private IDictionary<Point, byte> _uncovered = new Dictionary<Point, byte>();
         
         /// <summary>
         /// If the game is over, gets the result.
@@ -134,13 +133,13 @@ namespace Minesweeper.Model
             GuardPosition(position);
 
             // Store the movement
-            moves.Add(position);
+            _moves.Add(position);
 
             if (Mines.Contains(position))
             {
                 // boom
                 Result = GameResult.Lose;
-                foreach(var mine in Mines) uncovered[mine] = Mine;
+                foreach(var mine in Mines) _uncovered[mine] = Mine;
             }
 
             // Uncover and expand outwards until there's a warning
@@ -157,17 +156,17 @@ namespace Minesweeper.Model
         public void Flag(Point position, FlagKind? kind)
         {
             if (Result.HasValue) throw new InvalidOperationException("The game already ended.");
-            if (kind != null && Flags.ContainsKey(position) && flags[position] == kind) throw new ArgumentException("Already flagged this position.");
+            if (kind != null && Flags.ContainsKey(position) && Flags[position] == kind) throw new ArgumentException("Already flagged this position.");
             if (Uncovered.Keys.Contains(position)) throw new ArgumentException("Already uncovered this position.");
             GuardPosition(position);
 
             if (kind != null)
             {
-                flags[position] = kind.Value;
+                Flags[position] = kind.Value;
             }
             else if (Flags.ContainsKey(position))
             {
-                flags.Remove(position);
+                Flags.Remove(position);
             }
         }
 
@@ -177,10 +176,10 @@ namespace Minesweeper.Model
         private void Uncover(Point position)
         {
             if (Flags.Keys.Contains(position)) return;           // Don't uncover flagged positions.
-            if (uncovered.ContainsKey(position)) return;    // Don't repeat positions
+            if (_uncovered.ContainsKey(position)) return;    // Don't repeat positions
 
             var warning = GetWarningCount(position);
-            uncovered[position] = warning;
+            _uncovered[position] = warning;
             if (warning > 0) return;    // Don't expand if has a mine close by
 
             // Expand outwards
