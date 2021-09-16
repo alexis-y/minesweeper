@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,7 @@ using Minesweeper.Model;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Security.Claims;
 
 namespace Minesweeper
 {
@@ -32,7 +34,7 @@ namespace Minesweeper
             services.AddDbContext<ApplicationDbContext>(opts => opts.UseSqlServer(Configuration.GetConnectionString("Minesweeper")));
 
             // Authn
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddDefaultIdentity<ApplicationUser>(opts => opts.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer()
@@ -40,6 +42,9 @@ namespace Minesweeper
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
+
+            // This is supposed to be the default, but somewhere it's being changed (to 'sub') and then user UserManager doesn't work
+            services.Configure<IdentityOptions>(opts => opts.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
             // Use the Swagger Generator to describe our API
             services.AddSwaggerGen(opts =>
