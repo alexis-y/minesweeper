@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Minesweeper.Model;
 using System;
 using System.Drawing;
 using System.Linq;
 
-namespace Minesweeper.Model.Mapping
+namespace Minesweeper.Data.Mapping
 {
     public class GameEntityTypeConfiguration : IEntityTypeConfiguration<Game>
     {

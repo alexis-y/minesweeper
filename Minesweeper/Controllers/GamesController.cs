@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Minesweeper.Data;
 using Minesweeper.Model;
 
 namespace Minesweeper.Controllers
@@ -12,15 +14,18 @@ namespace Minesweeper.Controllers
     [ApiController]
     public class GamesController : ControllerBase
     {
-        public GamesController(IMapper mapper, IGameRepository db)
+        public GamesController(IMapper mapper, IGameRepository db, UserManager<ApplicationUser> userManager)
         {
             Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             Db = db ?? throw new ArgumentNullException(nameof(db)); // TODO: Persistance thru EF
+            UserManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         protected IMapper Mapper { get; }
 
         protected IGameRepository Db { get; }
+
+        protected UserManager<ApplicationUser> UserManager { get; }
 
         /// <summary>
         /// Fetches all the unfinished <see cref="Dto.Game"/> of the user.
@@ -29,7 +34,7 @@ namespace Minesweeper.Controllers
         [HttpGet(Name = "GetAll")]
         public async Task<IEnumerable<Dto.Game>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return Mapper.Map<IEnumerable<Dto.Game>>(await Db.GetByOwnerIdAsync(await GetApplicationUserAsync()));
         }
 
         /// <summary>
@@ -39,7 +44,9 @@ namespace Minesweeper.Controllers
         [HttpGet("{id}", Name = "GetById")]
         public async Task<Dto.Game> GetByIdAsync(Guid id)
         {
-            var game = await Db.GetAsync(id);
+            var game = await Db.GetAsync(id, await GetApplicationUserAsync());
+            if (game == null) return null;
+
             return Mapper.Map<Dto.Game>(game);
         }
 
@@ -52,6 +59,7 @@ namespace Minesweeper.Controllers
         {
             // Create a new game (and make the first move)
             var game = Game.Create(creation.Field, creation.Mines);
+            game.Owner = await GetApplicationUserAsync();
 
             // TODO: It's not good UX if the first move ends in gameover...
             game.Move(creation.Move);
@@ -69,7 +77,7 @@ namespace Minesweeper.Controllers
         public async Task<Dto.Game> MoveAsync(Guid id, [FromBody] Dto.Point position)
         {
             // Make a move on a game
-            var game = await Db.GetAsync(id);
+            var game = await Db.GetAsync(id, await GetApplicationUserAsync());
             if (game == null) return null;
 
             // TODO: Turn InvalidOpEx into 400. Possible this is done as an app-wide filter.
@@ -103,13 +111,18 @@ namespace Minesweeper.Controllers
             }
 
             // Plant a flag
-            var game = await Db.GetAsync(id);
+            var game = await Db.GetAsync(id, await GetApplicationUserAsync());
             if (game == null) return null;
 
             game.Flag(position, flagKind);
             await Db.SaveAsync(game);
 
             return Mapper.Map<Dto.Game>(game);
+        }
+
+        protected Task<ApplicationUser> GetApplicationUserAsync()
+        {
+            return UserManager.GetUserAsync(User);
         }
     }
 }

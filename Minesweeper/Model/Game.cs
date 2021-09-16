@@ -75,8 +75,10 @@ namespace Minesweeper.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; protected set; }
 
-        // TODO: Owner (thru ASP.NET Identity).
-        //       For the time being, all games are public (if you know the ID)
+        /// <summary>
+        /// Gets or sets the user that owns this game.
+        /// </summary>
+        public ApplicationUser Owner { get; set; }
         
         /// <summary>
         /// Gets the width and height of the game field.

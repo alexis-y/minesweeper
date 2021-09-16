@@ -2,7 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace Minesweeper.Model.Mapping
+namespace Minesweeper.Data.Mapping
 {
     public class SizeConverter : ValueConverter<Size, string>
     {

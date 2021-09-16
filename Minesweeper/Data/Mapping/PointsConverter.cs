@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace Minesweeper.Model.Mapping
+namespace Minesweeper.Data.Mapping
 {
     public class PointsConverter: ValueConverter<IEnumerable<Point>, string>
     {

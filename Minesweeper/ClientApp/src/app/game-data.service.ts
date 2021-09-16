@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 
+import { Observable } from 'rxjs';
+
 import { DataService } from './data.service';
-import { Observable } from 'rxjs/Observable';
 import { Game, Size, Point } from './model';
 
 type GameCreation = {
@@ -17,6 +18,10 @@ export class GameDataService extends DataService {
 
   public get(id: string): Observable<Game> {
     return this._get(id);
+  }
+
+  public getAll(): Observable<Game[]> {
+    return this._get('');
   }
 
   public startNew(creation: GameCreation): Observable<Game> {

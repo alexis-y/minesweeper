@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 import { Observable } from 'rxjs';
-import { map, first } from 'rxjs/operators';
+import { first } from 'rxjs/operators';
 
 import { GameDataService } from '../game-data.service';
 import { Game } from '../model';
