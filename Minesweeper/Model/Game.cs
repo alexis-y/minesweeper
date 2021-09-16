@@ -17,6 +17,7 @@ namespace Minesweeper.Model
         public Game()
         {
             Id = Guid.NewGuid();
+            StartTime = DateTimeOffset.Now;
         }
 
         /// <summary>
@@ -31,7 +32,6 @@ namespace Minesweeper.Model
             if (field.Width >= 256 || field.Height >= 256) throw new ArgumentException("The field's side cannot exceed 255.", nameof(field));
             if (mines == null) throw new ArgumentNullException(nameof(mines));
             if (mines.Any(p => !(p.X >= 0 && p.X < field.Width && p.Y >= 0 && p.Y < field.Height))) throw new ArgumentException("There are mines outside the field.");
-
 
             Field = field;
             Mines = new ReadOnlyCollection<Point>(mines.ToList());
@@ -89,6 +89,11 @@ namespace Minesweeper.Model
         /// Gets the number of moves the player took.
         /// </summary>
         public int Moves { get; protected set; }
+
+        /// <summary>
+        /// Gets the date and time the game started.
+        /// </summary>
+        public DateTimeOffset StartTime { get; protected set; }
 
         /// <summary>
         /// Gets the location of every mine in the field.

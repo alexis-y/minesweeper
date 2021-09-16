@@ -28,7 +28,10 @@ namespace Minesweeper.Data
 
         public async ValueTask<IEnumerable<Game>> GetByOwnerIdAsync(ApplicationUser owner)
         {
-            return await Db.Games.Where(g => g.Owner == owner).ToArrayAsync();
+            return await Db.Games
+                .Where(g => g.Owner == owner)
+                .Where(g => g.Result == null)
+                .ToArrayAsync();
         }
 
         public async Task SaveAsync(Game game)

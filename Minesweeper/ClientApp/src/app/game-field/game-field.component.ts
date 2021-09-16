@@ -40,14 +40,14 @@ export class GameFieldComponent {
     if (this.isQuestionFlag(cell)) this.onClearFlag.emit({ x, y });
   }
 
-  get height() { return this.fieldState.split('\r\n').length; }
+  get height() { return (this.fieldState || '').split('\r\n').length; }
   get width() {
-    var x = this.fieldState.indexOf('\r\n');
-    if (x < 0) x = this.fieldState.length;
+    var x = (this.fieldState || '').indexOf('\r\n');
+    if (x < 0) x = (this.fieldState || '').length;
     return x;
   }
 
-  get rows() { return this.fieldState.split('\r\n').map(row => Array.from(row)); }
+  get rows() { return (this.fieldState || '').split('\r\n').map(row => Array.from(row)); }
 
   isEmpty(cell: string) { return cell === '.'; }
   isRedFlag(cell: string) { return cell === '#'; }

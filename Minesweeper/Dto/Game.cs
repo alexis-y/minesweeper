@@ -13,6 +13,11 @@ namespace Minesweeper.Dto
         public Guid Id { get; set; }
 
         /// <summary>
+        /// The date and time the game started.
+        /// </summary>
+        public DateTimeOffset StartTime { get; set; }
+
+        /// <summary>
         /// The size of the minefield.
         /// </summary>
         public Size Field { get; set; }

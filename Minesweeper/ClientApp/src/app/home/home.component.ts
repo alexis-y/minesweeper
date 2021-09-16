@@ -3,17 +3,18 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
+import { AuthorizeService } from '../../api-authorization/authorize.service';
 
 import { GameCreation, GameDataService } from '../game-data.service';
-import { Point } from '../model';
+import { Game, Point } from '../model';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
 })
 export class HomeComponent implements OnInit {
-  constructor(private gameService: GameDataService, private router: Router, private fb: FormBuilder) {
+  constructor(private gameService: GameDataService, private router: Router, private fb: FormBuilder, private authorizeService: AuthorizeService) {
     //// In a real client, we would do this when starting a new game, after the player picks a tile.
     //this.game$ = gameService.startNew({
     //  field: { width: 10, height: 10 },
@@ -34,9 +35,18 @@ export class HomeComponent implements OnInit {
       field: { width: 10, height: 10 },
       mines: 8
     });
+
+    // For resuming old games
+    this.isAuthenticated$ = this.authorizeService.isAuthenticated();
+    this.savedGames$ = this.isAuthenticated$.pipe(
+      filter(value => value),
+      switchMap(() => this.gameService.getAll())
+    );
   }
 
   public initialField$: Observable<string>;
+  public isAuthenticated$: Observable<boolean>;
+  public savedGames$: Observable<Game[]>;
 
   public playerMoved(position: Point) {
     // Start a new game and go there
