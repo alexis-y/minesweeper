@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Minesweeper.Model;
 
@@ -21,11 +23,21 @@ namespace Minesweeper.Controllers
         protected IGameRepository Db { get; }
 
         /// <summary>
+        /// Fetches all the unfinished <see cref="Dto.Game"/> of the user.
+        /// </summary>
+        [Authorize]
+        [HttpGet(Name = "GetAll")]
+        public async Task<IEnumerable<Dto.Game>> GetAllAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Fetches a <see cref="Dto.Game"/> by it's ID.
         /// </summary>
         /// <param name="id">The ID of the game looked for.</param>
-        [HttpGet("{id}", Name = "Get")]
-        public async Task<Dto.Game> GetAsync(Guid id)
+        [HttpGet("{id}", Name = "GetById")]
+        public async Task<Dto.Game> GetByIdAsync(Guid id)
         {
             var game = await Db.GetAsync(id);
             return Mapper.Map<Dto.Game>(game);
@@ -35,8 +47,8 @@ namespace Minesweeper.Controllers
         /// Starts a new <see cref="Dto.Game"/>.
         /// </summary>
         /// <param name="creation">Parameters of the new game.</param>
-        [HttpPost]
-        public async Task<Dto.Game> Post([FromBody] Dto.GameCreation creation)
+        [HttpPost(Name = "Post")]
+        public async Task<Dto.Game> PostAsync([FromBody] Dto.GameCreation creation)
         {
             // Create a new game (and make the first move)
             var game = Game.Create(creation.Field, creation.Mines);
@@ -54,7 +66,7 @@ namespace Minesweeper.Controllers
         /// <param name="id">The ID of the game looked for.</param>
         /// <param name="position">The position played.</param>
         [HttpPost("{id}/move")]
-        public async Task<Dto.Game> Move(Guid id, [FromBody] Dto.Point position)
+        public async Task<Dto.Game> MoveAsync(Guid id, [FromBody] Dto.Point position)
         {
             // Make a move on a game
             var game = await Db.GetAsync(id);
@@ -74,7 +86,7 @@ namespace Minesweeper.Controllers
         /// <param name="kind">"red-flag", "question" or "clear".</param>
         /// <param name="position">The position flagged.</param>
         [HttpPost("{id}/flag/{kind}")]
-        public async Task<Dto.Game> Flag(Guid id, string kind, [FromBody] Dto.Point position)
+        public async Task<Dto.Game> FlagAsync(Guid id, string kind, [FromBody] Dto.Point position)
         {
             FlagKind? flagKind = null;
             if (StringComparer.InvariantCultureIgnoreCase.Equals(kind, "red-flag"))

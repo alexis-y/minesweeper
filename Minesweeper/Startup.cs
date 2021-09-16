@@ -1,6 +1,8 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +10,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Minesweeper.Model;
-using Newtonsoft.Json.Converters;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace Minesweeper
 {
@@ -27,12 +29,21 @@ namespace Minesweeper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Data access
+            services.AddDbContext<MinesweeperContext>(opts => opts.UseSqlServer(Configuration.GetConnectionString("Minesweeper")));
+
+            // Authn
+            services.AddDefaultIdentity<IdentityUser>()
+                .AddEntityFrameworkStores<MinesweeperContext>();
+            services.AddIdentityServer()
+                .AddApiAuthorization<IdentityUser, MinesweeperContext>();
+            services.AddAuthentication()
+                .AddIdentityServerJwt();
+
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                .AddJsonOptions(opts =>
-                {
-                    opts.SerializerSettings.Converters.Add(new StringEnumConverter());
-                });
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddMvcOptions(opts => opts.EnableEndpointRouting = false)
+                .AddJsonOptions(opts => opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
             // Use the Swagger Generator to describe our API
             services.AddSwaggerGen(opts =>
@@ -65,7 +76,6 @@ namespace Minesweeper
 
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-            services.AddDbContext<MinesweeperContext>(opts => opts.UseSqlServer(Configuration.GetConnectionString("Minesweeper")));
             services.AddScoped<IGameRepository, DbGameRepository>();
         }
 
@@ -80,6 +90,9 @@ namespace Minesweeper
             {
                 app.UseExceptionHandler("/Error");
             }
+
+            app.UseAuthentication();
+            app.UseIdentityServer();
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

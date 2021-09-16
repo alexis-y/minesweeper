@@ -1,21 +1,37 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Minesweeper.Model.Mapping;
+﻿using IdentityServer4.EntityFramework.Entities;
+using IdentityServer4.EntityFramework.Extensions;
+using IdentityServer4.EntityFramework.Interfaces;
+using IdentityServer4.EntityFramework.Options;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Minesweeper.Model
 {
-    public class MinesweeperContext : DbContext
+    public class MinesweeperContext : IdentityDbContext, IPersistedGrantDbContext
     {
-        public MinesweeperContext() : base() { }
-        public MinesweeperContext(DbContextOptions options) : base(options) { }
+        public MinesweeperContext(DbContextOptions options, OperationalStoreOptions storeOptions) : base(options) {
+            StoreOptions = storeOptions;
+        }
 
         public DbSet<Game> Games { get; set; }
+        public DbSet<PersistedGrant> PersistedGrants { get; set; }
+        public DbSet<DeviceFlowCodes> DeviceFlowCodes { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new GameEntityTypeConfiguration());
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            modelBuilder.ConfigurePersistedGrantContext(StoreOptions);
+        }
 
-            // NOTE: Next version of EF has "ApplyConfigurationsFromAssembly" which does the same in one call
-            //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        private OperationalStoreOptions StoreOptions { get; }
+
+        Task<int> IPersistedGrantDbContext.SaveChangesAsync()
+        {
+            return SaveChangesAsync();
         }
     }
 }
