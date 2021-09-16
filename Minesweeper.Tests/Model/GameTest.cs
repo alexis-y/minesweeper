@@ -209,7 +209,7 @@ namespace Minesweeper.Tests.Model
             game.Move(new Point(3, 1));
             Assert.IsNotNull(game.Result);
 
-            Assert.ThrowsException<InvalidOperationException>(() => game.Move(new Point(0, 1)));
+            Assert.ThrowsException<IllegalActionException>(() => game.Move(new Point(0, 1)));
 
         }
 
@@ -229,7 +229,7 @@ namespace Minesweeper.Tests.Model
 
             game.Move(new Point(1, 2)); // This uncovers a span
             CollectionAssert.Contains(game.Uncovered.Keys.ToArray(), new Point(0, 2));  // We already tested this
-            Assert.ThrowsException<ArgumentException>(() => game.Move(new Point(0, 2)));
+            Assert.ThrowsException<IllegalActionException>(() => game.Move(new Point(0, 2)));
 
         }
 
@@ -248,7 +248,7 @@ namespace Minesweeper.Tests.Model
              */
 
             game.Flag(new Point(0, 0), FlagKind.RedFlag); // There's a mine here
-            Assert.ThrowsException<ArgumentException>(() => game.Move(new Point(0, 0)));
+            Assert.ThrowsException<IllegalActionException>(() => game.Move(new Point(0, 0)));
 
         }
 
@@ -312,7 +312,7 @@ namespace Minesweeper.Tests.Model
              */
 
             game.Flag(new Point(1, 1), FlagKind.RedFlag);
-            Assert.ThrowsException<ArgumentException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
+            Assert.ThrowsException<IllegalActionException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
         }
 
 
@@ -367,7 +367,7 @@ namespace Minesweeper.Tests.Model
              */
 
             game.Move(new Point(2, 2));
-            Assert.ThrowsException<ArgumentException>(() => game.Flag(new Point(2, 2), FlagKind.RedFlag));
+            Assert.ThrowsException<IllegalActionException>(() => game.Flag(new Point(2, 2), FlagKind.RedFlag));
 
         }
 
@@ -387,8 +387,8 @@ namespace Minesweeper.Tests.Model
             game.Move(new Point(1, 1));
             Assert.IsNotNull(game.Result);
 
-            Assert.ThrowsException<InvalidOperationException>(() => game.Flag(new Point(1, 0), null));
-            Assert.ThrowsException<InvalidOperationException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
+            Assert.ThrowsException<IllegalActionException>(() => game.Flag(new Point(1, 0), null));
+            Assert.ThrowsException<IllegalActionException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
 
         }
 

@@ -238,9 +238,9 @@ namespace Minesweeper.Model
         /// </summary>
         public void Move(Point position)
         {
-            if (Result.HasValue) throw new InvalidOperationException("The game already ended.");
-            if (Uncovered.Keys.Contains(position)) throw new ArgumentException("Already uncovered this position.");
-            if (Flags.Keys.Contains(position)) throw new ArgumentException("Already flagged this position.");
+            if (Result.HasValue) throw new IllegalActionException("The game already ended.");
+            if (Uncovered.Keys.Contains(position)) throw new IllegalActionException("Already uncovered this position.");
+            if (Flags.Keys.Contains(position)) throw new IllegalActionException("Already flagged this position.");
             GuardPosition(position);
 
             Moves++;
@@ -266,9 +266,9 @@ namespace Minesweeper.Model
         /// </summary>
         public void Flag(Point position, FlagKind? kind)
         {
-            if (Result.HasValue) throw new InvalidOperationException("The game already ended.");
-            if (kind != null && Flags.ContainsKey(position) && Flags[position] == kind) throw new ArgumentException("Already flagged this position.");
-            if (Uncovered.Keys.Contains(position)) throw new ArgumentException("Already uncovered this position.");
+            if (Result.HasValue) throw new IllegalActionException("The game already ended.");
+            if (kind != null && Flags.ContainsKey(position) && Flags[position] == kind) throw new IllegalActionException("Already flagged this position.");
+            if (Uncovered.Keys.Contains(position)) throw new IllegalActionException("Already uncovered this position.");
             GuardPosition(position);
 
             InvalidateFieldState();
@@ -310,7 +310,7 @@ namespace Minesweeper.Model
 
         private void GuardPosition(Point position)
         {
-            if (!IsInField(position)) throw new ArgumentException("The position is outside the field", nameof(position));
+            if (!IsInField(position)) throw new IllegalActionException("The position is outside the field");
         }
     }
 }

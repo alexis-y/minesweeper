@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ namespace Minesweeper.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [TypeFilter(typeof(IllegalActionFilter))]
     public class GamesController : ControllerBase
     {
         public GamesController(IMapper mapper, IGameRepository db, UserManager<ApplicationUser> userManager)
@@ -42,12 +44,14 @@ namespace Minesweeper.Controllers
         /// </summary>
         /// <param name="id">The ID of the game looked for.</param>
         [HttpGet("{id}", Name = "GetById")]
-        public async Task<Dto.Game> GetByIdAsync(Guid id)
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(Dto.Game), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var game = await Db.GetAsync(id, await GetApplicationUserAsync());
-            if (game == null) return null;
+            if (game == null) return NotFound();
 
-            return Mapper.Map<Dto.Game>(game);
+            return Ok(Mapper.Map<Dto.Game>(game));
         }
 
         /// <summary>
@@ -55,6 +59,7 @@ namespace Minesweeper.Controllers
         /// </summary>
         /// <param name="creation">Parameters of the new game.</param>
         [HttpPost(Name = "Post")]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<Dto.Game> PostAsync([FromBody] Dto.GameCreation creation)
         {
             // Create a new game (and make the first move)
@@ -74,17 +79,20 @@ namespace Minesweeper.Controllers
         /// <param name="id">The ID of the game looked for.</param>
         /// <param name="position">The position played.</param>
         [HttpPost("{id}/move")]
-        public async Task<Dto.Game> MoveAsync(Guid id, [FromBody] Dto.Point position)
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(Dto.Game), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> MoveAsync(Guid id, [FromBody] Dto.Point position)
         {
             // Make a move on a game
             var game = await Db.GetAsync(id, await GetApplicationUserAsync());
-            if (game == null) return null;
+            if (game == null) return NotFound();
 
             // TODO: Turn InvalidOpEx into 400. Possible this is done as an app-wide filter.
             game.Move(position);
             await Db.SaveAsync(game);
 
-            return Mapper.Map<Dto.Game>(game);
+            return Ok(Mapper.Map<Dto.Game>(game));
         }
 
         /// <summary>
@@ -94,7 +102,10 @@ namespace Minesweeper.Controllers
         /// <param name="kind">"red-flag", "question" or "clear".</param>
         /// <param name="position">The position flagged.</param>
         [HttpPost("{id}/flag/{kind}")]
-        public async Task<Dto.Game> FlagAsync(Guid id, string kind, [FromBody] Dto.Point position)
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(Dto.Game), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> FlagAsync(Guid id, string kind, [FromBody] Dto.Point position)
         {
             FlagKind? flagKind = null;
             if (StringComparer.InvariantCultureIgnoreCase.Equals(kind, "red-flag"))
@@ -112,12 +123,12 @@ namespace Minesweeper.Controllers
 
             // Plant a flag
             var game = await Db.GetAsync(id, await GetApplicationUserAsync());
-            if (game == null) return null;
+            if (game == null) return NotFound();
 
             game.Flag(position, flagKind);
             await Db.SaveAsync(game);
 
-            return Mapper.Map<Dto.Game>(game);
+            return Ok(Mapper.Map<Dto.Game>(game));
         }
 
         protected Task<ApplicationUser> GetApplicationUserAsync()

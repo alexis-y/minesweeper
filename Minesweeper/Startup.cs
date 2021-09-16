@@ -46,6 +46,8 @@ namespace Minesweeper
             // This is supposed to be the default, but somewhere it's being changed (to 'sub') and then user UserManager doesn't work
             services.Configure<IdentityOptions>(opts => opts.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
+            services.AddRouting(opts => opts.LowercaseUrls = true);
+
             // Use the Swagger Generator to describe our API
             services.AddSwaggerGen(opts =>
             {
@@ -59,11 +61,10 @@ namespace Minesweeper
                         Email = "alexisy@turboserver.com.ar"
                     }
                 });
+                // Include our /// comments there too
                 opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
-                // TODO: make endpoint paths camelCase (https://github.com/domaindrivendev/Swashbuckle.WebApi/issues/834, seemengly fixed in aspnet v2.2
 
                 // payload is supposed to be serialized in camelCase already (test that!), but the doc doesn't know it so nudge it
-                // TODO: This doesn't work :(
                 opts.DescribeAllParametersInCamelCase();
 
                 opts.UseInlineDefinitionsForEnums();
