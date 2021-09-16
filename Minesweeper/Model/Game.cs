@@ -86,20 +86,20 @@ namespace Minesweeper.Model
         public Size Field { get; protected set; }
 
         /// <summary>
+        /// Gets the number of moves the player took.
+        /// </summary>
+        public int Moves { get; protected set; }
+
+        /// <summary>
         /// Gets the location of every mine in the field.
         /// </summary>
         public IEnumerable<Point> Mines { get; protected set; } // This is private data that the backend will *not* divulge
 
         /// <summary>
-        /// Gets the positions the player clicked.
-        /// </summary>
-        public IEnumerable<Point> Moves => _moves;
-        private ICollection<Point> _moves = new List<Point>();
-
-        /// <summary>
         /// Gets the positions the player flagged.
         /// </summary>
-        public IDictionary<Point, FlagKind> Flags { get; protected set; } = new Dictionary<Point, FlagKind>();
+        public IReadOnlyDictionary<Point, FlagKind> Flags => (IReadOnlyDictionary<Point, FlagKind>)_flags;
+        private IDictionary<Point, FlagKind> _flags = new Dictionary<Point, FlagKind>();
 
         /// <summary>
         /// Gets all the positions that are uncovered, as well as the number of mines adjacent for each.
@@ -110,6 +110,110 @@ namespace Minesweeper.Model
         public IReadOnlyDictionary<Point, byte> Uncovered => (IReadOnlyDictionary<Point, byte>)_uncovered;
         private IDictionary<Point, byte> _uncovered = new Dictionary<Point, byte>();
         
+        /// <summary>
+        /// Represents the state of the minefield in a grid of chars for simple serialization.
+        /// </summary>
+        public char[,] FieldState
+        {
+            get
+            {
+                if (_fieldState == null) _fieldState = GenerateFieldState();
+                return _fieldState;
+            }
+            protected set
+            {
+                SetGameState(value);
+                _fieldState = value;
+                // TODO: Refactor the private state to a separate class with testable input/output
+            }
+        }
+        private char[,] _fieldState = null;
+
+        protected void InvalidateFieldState()
+        {
+            _fieldState = null;
+        }
+
+        private char[,] GenerateFieldState()
+        {
+            /*
+             * Given the minefield size, we can transform the internal list of points to a simple text grid with a char for each tile
+             * ie.:
+             * 
+             * ..#..
+             * ..1..
+             * #202#
+             * .#2#.
+             * .....
+             * 
+             */
+
+            // Key: 
+            //  '.' covered tile
+            //  '[0-8]' uncovered tile, with the given number of mines in the proximity 
+            //  'X' uncovered mine
+            //  '#' red flag
+            //  '?' mark
+
+            var result = new char[Field.Width, Field.Height];
+            for (var y = 0; y < Field.Height; y++)
+            {
+                for (var x = 0; x < Field.Width; x++)
+                {
+                    var p = new Point(x, y);
+                    if (Flags.TryGetValue(p, out var kind))
+                    {
+                        result[x, y] = kind == FlagKind.RedFlag ? '#' : '?';
+                    }
+                    else if (Uncovered.TryGetValue(p, out var value))
+                    {
+                        result[x, y] = value == Mine ? 'X' : $"{value}"[0];
+                    }
+                    else
+                    {
+                        result[x, y] = '.';
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Sets the internal game state based on the grid representation.
+        /// </summary>
+        private void SetGameState(char[,] fieldState)
+        {
+            if (fieldState == null) throw new ArgumentNullException(nameof(fieldState));
+            // This is only intended to be used by EF
+            if (!Field.IsEmpty) throw new InvalidOperationException();
+
+            // Just in case
+            _uncovered = new Dictionary<Point, byte>();
+            _flags = new Dictionary<Point, FlagKind>();
+
+            // Set the field size based on the grid dimensions
+            Field = new Size(fieldState.GetLength(0), fieldState.GetLength(1));
+
+            for (var y = 0; y < Field.Height; y++) for (var x = 0; x < Field.Width; x++)
+                {
+                    var p = new Point(x, y);
+                    if (char.IsNumber(fieldState[x, y]))
+                    {
+                        // It's an uncovered tile
+                        _uncovered[p] = byte.Parse($"{fieldState[x, y]}");
+                    }
+                    else if (fieldState[x, y] == '#')
+                    {
+                        _flags[p] = FlagKind.RedFlag;
+                    }
+                    else if (fieldState[x, y] == '?')
+                    {
+                        _flags[p] = FlagKind.Tentative;
+                    }
+                }
+        }
+
         /// <summary>
         /// If the game is over, gets the result.
         /// </summary>
@@ -134,8 +238,8 @@ namespace Minesweeper.Model
             if (Flags.Keys.Contains(position)) throw new ArgumentException("Already flagged this position.");
             GuardPosition(position);
 
-            // Store the movement
-            _moves.Add(position);
+            Moves++;
+            InvalidateFieldState();
 
             if (Mines.Contains(position))
             {
@@ -162,13 +266,15 @@ namespace Minesweeper.Model
             if (Uncovered.Keys.Contains(position)) throw new ArgumentException("Already uncovered this position.");
             GuardPosition(position);
 
+            InvalidateFieldState();
+
             if (kind != null)
             {
-                Flags[position] = kind.Value;
+                _flags[position] = kind.Value;
             }
             else if (Flags.ContainsKey(position))
             {
-                Flags.Remove(position);
+                _flags.Remove(position);
             }
         }
 

@@ -1,0 +1,20 @@
+<table>
+  <tr *ngFor="let row of rows; index as y">
+    <td *ngFor="let cell of row; index as x">
+      <button *ngIf="isEmpty(cell)" class="btn btn-light" [disabled]="disabled"
+              (click)="move(x, y)" (contextmenu)="toggleFlag(x, y, $event)">
+        &nbsp;
+      </button>
+      <button *ngIf="isRedFlag(cell)" class="btn btn-danger" [disabled]="disabled"
+              (contextmenu)="toggleFlag(x, y, $event)">
+        &nbsp;
+      </button>
+      <button *ngIf="isQuestionFlag(cell)" class="btn btn-warning" [disabled]="disabled"
+              (contextmenu)="toggleFlag(x, y, $event)">
+        &nbsp;
+      </button>
+      <button *ngIf="isMine(cell)" class="btn" [disabled]="disabled">💣</button>
+      <button *ngIf="isUncovered(cell)" class="btn" [disabled]="disabled">{{cell > 0 ? cell : ' '}}</button>
+    </td>
+  </tr>
+</table>

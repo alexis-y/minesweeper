@@ -11,7 +11,7 @@ namespace Minesweeper.Data.Mapping
         // NOTE: We don't do sanitation of the values in the DB
         public PointsConverter() : base(
             /* model -> db */ value => string.Join(';', value.Select(p => $"{p.X}x{p.Y}")),
-            /* db -> model */ value => value.Split(';', StringSplitOptions.None).Select(p => new Point(int.Parse(p.Split('x', StringSplitOptions.None)[0]), int.Parse(p.Split('x', StringSplitOptions.None)[1]))))
+            /* db -> model */ value => value.Split(';', StringSplitOptions.None).Select(p => new Point(int.Parse(p.Split('x', StringSplitOptions.None)[0]), int.Parse(p.Split('x', StringSplitOptions.None)[1]))).ToList())
         {
         }
 

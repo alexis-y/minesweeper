@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Minesweeper.Dto
 {
@@ -19,9 +18,14 @@ namespace Minesweeper.Dto
         public Size Field { get; set; }
 
         /// <summary>
+        /// The number of mines.
+        /// </summary>
+        public int Mines { get; set; }
+
+        /// <summary>
         /// The minefield data represented as a grid in text form.
         /// </summary>
-        public string Uncovered { get; set; }
+        public string FieldState { get; set; }
 
         /// <summary>
         /// The result of the game if it's over.

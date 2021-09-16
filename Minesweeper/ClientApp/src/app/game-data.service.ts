@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { DataService } from './data.service';
 import { Game, Size, Point } from './model';
 
-type GameCreation = {
+export type GameCreation = {
   field: Size,
   mines: number;
   move: Point
@@ -28,19 +28,23 @@ export class GameDataService extends DataService {
     return this._post('', creation);
   }
 
-  public move(id: string, position: Point): Observable<Game> {
-    return this._post(`${id}/move`, position);
+  public move(game: string | Game, position: Point): Observable<Game> {
+    if (!(typeof game == 'string')) game = game.id;
+    return this._post(`${game}/move`, position);
   }
 
-  public redFlag(id: string, position: Point): Observable<Game> {
-    return this._post(`${id}/flag/red-flag`, position);
+  public redFlag(game: string | Game, position: Point): Observable<Game> {
+    if (!(typeof game == 'string')) game = game.id;
+    return this._post(`${game}/flag/red-flag`, position);
   }
 
-  public question(id: string, position: Point): Observable<Game> {
-    return this._post(`${id}/flag/question`, position);
+  public questionFlag(game: string | Game, position: Point): Observable<Game> {
+    if (!(typeof game == 'string')) game = game.id;
+    return this._post(`${game}/flag/question`, position);
   }
 
-  public clearFlag(id: string, position: Point): Observable<Game> {
-    return this._post(`${id}/flag/clear`, position);
+  public clearFlag(game: string | Game, position: Point): Observable<Game> {
+    if (!(typeof game == 'string')) game = game.id;
+    return this._post(`${game}/flag/clear`, position);
   }
 }

@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Minesweeper.Model;
-using System;
-using System.Drawing;
-using System.Linq;
 
 namespace Minesweeper.Data.Mapping
 {
@@ -11,25 +9,23 @@ namespace Minesweeper.Data.Mapping
     {
         public void Configure(EntityTypeBuilder<Game> builder)
         {
-            builder.Property(o => o.Field)
-                .HasConversion(new SizeConverter());  // This as a convention would be nice. *shrugs*
+            builder.Ignore(o => o.Field);
+            builder.Ignore(o => o.Flags);
+            builder.Ignore(o => o.Uncovered);
 
             builder.Property(o => o.Mines)
                 .HasConversion(new PointsConverter());
 
-            builder.Property(o => o.Moves)
-                .HasConversion(new PointsConverter());
-
-            builder.Property(o => o.Flags)
+            // This guy is very particular. Internally it's a 2-dimensional array of chars, but it's persisted as multiline string and also compared as one.
+            builder.Property(o => o.FieldState)
+                .UsePropertyAccessMode(PropertyAccessMode.Property)     // Set thru the property so the rest of the state is also set
                 .HasConversion(
-                    /* model -> db */ value => string.Join(';', value.Select(p => $"{p.Key.X}x{p.Key.Y}x{(int)p.Value}")),
-                    /* db -> model */ value => value.Split(';', StringSplitOptions.None).ToDictionary(p => new Point(int.Parse(p.Split('x', StringSplitOptions.None)[0]), int.Parse(p.Split('x', StringSplitOptions.None)[1])),
-                                                                                                      p => (FlagKind)int.Parse(p.Split('x', StringSplitOptions.None)[2]))
-                );
+                    /* model -> db */ value => FieldStateConverter.GetString(value),
+                    /* db -> model */ value => FieldStateConverter.GetCharGrid(value))
+                .Metadata.SetValueComparer(new ValueComparer<char[,]>(
+                    /* equality */ (x, y) => FieldStateConverter.GetString(x) == FieldStateConverter.GetString(y), 
+                    /* hashcode */ x => FieldStateConverter.GetString(x).GetHashCode()));
 
-            // Because the game is deterministic, this is the only data required to recreate the entire game state
-            // TODO: Actually do recreate the game after hidrating a new Game. Something like game.Replay(). We need
-            //       someplace in EF to latch to.
         }
     }
 }

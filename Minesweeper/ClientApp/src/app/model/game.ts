@@ -4,6 +4,7 @@ import { Size } from './size';
 export interface Game {
   id: string;
   field: Size;
-  uncovered: string;
+  mines: number;
+  fieldState: string;
   result: GameResult | null;
 };

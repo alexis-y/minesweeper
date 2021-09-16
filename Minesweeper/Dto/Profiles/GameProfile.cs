@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using System.Collections.Generic;
+using Minesweeper.Model;
+using System.Linq;
 
 namespace Minesweeper.Dto.Profiles
 {
@@ -8,7 +9,9 @@ namespace Minesweeper.Dto.Profiles
         public GameProfile()
         {
             CreateMap<Model.Game, Dto.Game>()
-                .ForMember(o => o.Uncovered, map => map.MapFrom<FieldDataResolver, IReadOnlyDictionary<System.Drawing.Point, byte>>(o => o.Uncovered));
+                .ForMember(o => o.Mines, map => map.MapFrom(src => src.Mines.Count()))
+                .ForMember(o => o.FieldState, map => map.MapFrom(src => FieldStateConverter.GetString(src.FieldState)));
         }
+
     }
 }

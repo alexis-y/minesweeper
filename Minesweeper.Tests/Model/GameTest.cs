@@ -112,7 +112,7 @@ namespace Minesweeper.Tests.Model
 
             game.Move(new Point(3, 1));
 
-            CollectionAssert.AreEqual(new[] { new Point(3, 1) }, game.Moves.ToArray(), "Stored the move");
+            Assert.AreEqual(1, game.Moves);
             Assert.AreEqual(GameResult.Lose, game.Result);
             CollectionAssert.AreEquivalent(game.Mines.ToArray(), game.Uncovered.Keys.ToArray(), "All the mines were uncovered");
             Assert.IsTrue(game.Uncovered.Keys.All(pos => game.Uncovered[pos] == Game.Mine), "All the mines were uncovered");
@@ -135,7 +135,7 @@ namespace Minesweeper.Tests.Model
 
             game.Move(new Point(3, 0));
 
-            CollectionAssert.AreEqual(new[] { new Point(3, 0) }, game.Moves.ToArray(), "Stored the move");
+            Assert.AreEqual(1, game.Moves);
             Assert.IsNull(game.Result);
             CollectionAssert.AreEquivalent(new[] { new Point(3, 0) }, game.Uncovered.Keys.ToArray(), "The position was uncovered");
            
@@ -157,7 +157,7 @@ namespace Minesweeper.Tests.Model
 
             game.Move(new Point(1, 2));
 
-            CollectionAssert.AreEqual(new[] { new Point(1, 2) }, game.Moves.ToArray(), "Stored the move");
+            Assert.AreEqual(1, game.Moves);
             Assert.IsNull(game.Result);
             CollectionAssert.AreEquivalent(new[] {
                 new Point(0, 1), new Point(1, 1),
@@ -187,7 +187,7 @@ namespace Minesweeper.Tests.Model
             {
                 game.Move(move);
             }
-            CollectionAssert.AreEqual(moves, game.Moves.ToArray());
+            Assert.AreEqual(moves.Length, game.Moves);
             Assert.AreEqual(GameResult.Win, game.Result);
 
         }
@@ -269,7 +269,7 @@ namespace Minesweeper.Tests.Model
             game.Flag(new Point(1, 3), FlagKind.RedFlag);
             game.Move(new Point(1, 2));
 
-            CollectionAssert.AreEqual(new[] { new Point(1, 2) }, game.Moves.ToArray(), "Stored the move");
+            Assert.AreEqual(1, game.Moves);
             Assert.IsNull(game.Result);
             CollectionAssert.AreEquivalent(new[] {
                 new Point(0, 1), new Point(1, 1),
@@ -391,5 +391,62 @@ namespace Minesweeper.Tests.Model
             Assert.ThrowsException<InvalidOperationException>(() => game.Flag(new Point(1, 1), FlagKind.RedFlag));
 
         }
+
+        [TestMethod]
+        public void FieldState_CorrectFieldSize()
+        {
+            // The output grid has the expected size
+
+            var game = new Game(new Size(5, 7), Enumerable.Empty<Point>());
+
+            var output = game.FieldState;
+
+            Assert.IsNotNull(output);
+            Assert.AreEqual(5, output.GetLength(0));
+            Assert.AreEqual(7, output.GetLength(1));
+            for (var y = 0; y < 7; y++) for (var x = 0; x < 5; x++) Assert.AreEqual('.', output[x, y]);
+        }
+
+        [TestMethod]
+        public void FieldState_ProximityValues()
+        {
+            // The values for each tile is a single digit
+
+            var game = new Game(new Size(9, 1), new[] { new Point(2, 0), new Point(4, 0) });
+            game.Move(new Point(0, 0));
+            game.Move(new Point(3, 0));
+
+            var output = game.FieldState;
+
+            Assert.AreEqual("01.2.....", FieldStateConverter.GetString(output));
+        }
+
+        [TestMethod]
+        public void FieldState_ExposedMine()
+        {
+            // Exposed mines are shown with an X
+
+            var game = new Game(new Size(9, 1), new[] { new Point(4, 0), new Point(6, 0) });
+            game.Move(new Point(6, 0));
+
+            var output = game.FieldState;
+
+            Assert.AreEqual("....X.X..", FieldStateConverter.GetString(output));
+        }
+
+        [TestMethod]
+        public void FieldState_Flags()
+        {
+            // Flags are shown with an # or ?
+
+            var source = new Game(new Size(9, 1), Enumerable.Empty<Point>());
+            source.Flag(new Point(2, 0), FlagKind.RedFlag);
+            source.Flag(new Point(4, 0), FlagKind.Tentative);
+
+            var output = source.FieldState;
+
+            Assert.AreEqual("..#.?....", FieldStateConverter.GetString(output));
+        }
+
     }
 }
