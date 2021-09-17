@@ -8,23 +8,23 @@
   <div class="col-md">
     <h1 class="h2">Start new game</h1>
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
+    <form [formGroup]="form">
       <div class="form-row" formGroupName="field">
         <div class="col-sm form-group">
           <label for="field-width">Width</label>
-          <input class="form-control" id="field-width" type="number" formControlName="width" />
+          <input class="form-control" id="field-width" type="number" formControlName="width" min="1" max="32" />
         </div>
 
         <div class="col-sm form-group">
           <label for="field-height">Height</label>
-          <input class="form-control" id="field-height" type="number" formControlName="height" />
+          <input class="form-control" id="field-height" type="number" formControlName="height" min="1" max="32" />
         </div>
       </div>
 
       <div class="form-row">
         <div class="col-sm form-group">
           <label for="mines"># of mines</label>
-          <input class="form-control" id="mines" type="number" formControlName="mines" />
+          <input class="form-control" id="mines" type="number" formControlName="mines" min="1" [max]="form.get('field.width').value * form.get('field.height').value - 1"  />
         </div>
       </div>
     </form>

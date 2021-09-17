@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -15,23 +15,10 @@ import { Game, Point } from '../model';
 })
 export class HomeComponent implements OnInit {
   constructor(private gameService: GameDataService, private router: Router, private fb: FormBuilder, private authorizeService: AuthorizeService) {
-    //// In a real client, we would do this when starting a new game, after the player picks a tile.
-    //this.game$ = gameService.startNew({
-    //  field: { width: 10, height: 10 },
-    //  mines: 10,
-    //  move: { x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10) }
-    //}).pipe(first());
-    //this.game$.subscribe(g => this.minefield = g.uncovered);
   }
 
   ngOnInit(): void {
-    this.initialField$ = this.form.valueChanges.pipe(
-      map(({ field }: GameCreation) => {
-        var grid = ('.'.repeat(field.width) + '\r\n').repeat(field.height);
-        return grid.substring(0, grid.length - 2);  // chop off the trailing \r\n
-      }));
-
-    this.form.setValue({
+    this.form.reset({
       field: { width: 10, height: 10 },
       mines: 8
     });
@@ -44,7 +31,6 @@ export class HomeComponent implements OnInit {
     );
   }
 
-  public initialField$: Observable<string>;
   public isAuthenticated$: Observable<boolean>;
   public savedGames$: Observable<Game[]>;
 
@@ -54,11 +40,33 @@ export class HomeComponent implements OnInit {
     this.gameService.startNew(creation).subscribe(game => this.router.navigate(['game', game.id]));
   }
 
-  public form = this.fb.group({
+  readonly form = this.fb.group({
     field: this.fb.group({
       width: [0, [Validators.required, Validators.min(1), Validators.max(32)]],
       height: [0, [Validators.required, Validators.min(1), Validators.max(32)]],
     }),
-    mines: [0, [Validators.required, Validators.min(1)]]
+    mines: [0, [Validators.required, Validators.min(1), CustomValidators.dynamicMax(() => this.form ? (<number>this.form.get('field.width').value) * (<number>this.form.get('field.height').value) - 1 : 100)]]  // must be lower than the number of cells
   });
+
+  // The weird "this.form ? [use form] : [do not use form]" above is because the validator runs
+  // the first time before this.form is assigned
+
+  readonly initialField$ = this.form.valueChanges.pipe(
+    //filter(() => this.form.valid),
+    map(({ field }: GameCreation) => {
+      var grid = ('.'.repeat(field.width) + '\r\n').repeat(field.height);
+      return grid.substring(0, grid.length - 2);  // chop off the trailing \r\n
+    }));
+
+}
+
+class CustomValidators {
+  static dynamicMax(valueFn: () => number) {
+    return function dynamicMaxValidator(control: AbstractControl) {
+      if (control.value !== undefined && (Number.isNaN(control.value) || control.value > valueFn())) {
+        return { 'dynamicMax': true };
+      }
+      return null;
+    }
+  }
 }
